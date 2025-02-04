@@ -1,0 +1,36 @@
+OPTIONs=autopickup
+OPTIONs=color
+OPTIONs=disclose:+i +a +v +g +c +o
+OPTIONs=nobones
+OPTIONs=nocmdassist
+OPTIONs=nolegacy
+OPTIONs=nosparkle
+OPTIONs=runmode:teleport
+OPTIONs=showexp
+OPTIONs=showscore
+OPTIONs=time
+OPTIONs=paranoid_confirmation:none
+
+OPTIONs=pettype:none
+
+OPTIONS:name:Agent
+OPTIONs=race:hum
+OPTIONs=role:mon
+OPTIONs=gender:mal
+OPTIONs=align:neu
+
+# autopickup
+OPTIONS=pickup_types:$/%?!
+OPTIONs=pickup_burden:unencumbered
+AUTOPICKUP_EXCEPTION="<.* .* pair of leather gloves"
+AUTOPICKUP_EXCEPTION="<.* .* robe"
+AUTOPICKUP_EXCEPTION="> corpse"
+AUTOPICKUP_EXCEPTION=">.* tin.*"
+AUTOPICKUP_EXCEPTION="<lichen corpse" 
+AUTOPICKUP_EXCEPTION="<lizard corpse" 
+AUTOPICKUP_EXCEPTION="<newt corpse"
+AUTOPICKUP_EXCEPTION="<floating eye corpse"
+
+# messages
+MSGTYPE=hide "You see .*"
+MSGTYPE=hide "You hear .*"

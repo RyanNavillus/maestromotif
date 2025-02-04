@@ -1,0 +1,67 @@
+You are to write code which defines the method "reach_dungeons_of_doom" of the NetHack Player class that selects amongst a set of skills in the videogame of NetHack. The set of skills corresponds to {{"discoverer", "descender", "ascender", "merchant", "worshipper"}}. 
+
+When activated, the Discoverer fully explores the current dungeon, while fighting off enemies. The Descender makes its way to a staircase and goes down. The Ascender makes its way to a staircase and goes up. The Merchant interacts with shopkeepers by selling its items. The Worshipper interacts with altars by identifying its items.
+
+Previously, you have implemented the "select_skill" method which allowed for exploration through the first few dungeon levels, as shown here:
+
+###
+{}
+###
+
+Here is additional information with respect to the layout of the NetHack game.
+
+The Dungeons of Doom (branch number 0) constitute the main branch going from depth 1 to max_depth. At branch_depth, a second staircase appears opening the door towards the Gnomish Mines (branch number 2) at branch_depth+1. Therefore, the Gnomish Mines constitute a second branch from branch_depth+1 to max_depth.
+
+Each time the Descender descends from branch_depth to branch_depth+1, it has 0.5 chance of continuing either into the Dungeons of Doom (branch number 0) or entering the Gnomish Mines (branch number 2).
+
+The strategy should be the following: at branch_depth, the player should always attempt to descend into the Dungeons of Doom (branch number 0) at  branch_depth+1. Because the Descender can't tell which staircase at branch_depth leads to which branch, it is inevitable that the Player may descend into the Gnomish Mines at branch_depth+1 multiple times.
+
+If the descent to branch_depth+1 leads the agent to the Gnomish Mines (branch number 2), the player should immediately attempt to ascend to branch_depth and try again descending further into the Dungeons of Doom (branch number 0).
+
+Once deeper in the Dungeons of Doom the player can behave as usual with the exploration strategy involving the skills.
+
+The reach_dungeons_of_doom method cannot modify the branch_number variable, but it should call the select_skill method.
+
+Your code will be verified through this unit test. 
+
+###
+
+# Starting conditions
+skill = 'discoverer'
+dungeon_depth = 1
+branch_number = 0
+
+max_depth = 4 # to be defined
+
+# the environment decides on the branch_depth
+branch_depth = 2
+
+player = NetHackPlayer(max_depth, branch_depth)
+
+for turn in range(20):
+    print(f"Turn {{turn + 1}}: Skill = {{skill}}, Dungeon depth = {{dungeon_depth}}, Branch Number = {{branch_number}}")
+
+    merchant_precondition = player.merchant_precondition()
+    worshipper_precondition = player.worshipper_precondition()
+
+    skill = player.reach_dungeons_of_doom(skill, dungeon_depth, branch_number, merchant_precondition, worshipper_precondition)
+
+    # the environment updates the dungeon_depth
+    if skill == 'descender':
+        dungeon_depth += 1
+    elif skill == 'ascender':
+        dungeon_depth -= 1
+
+    # the environment modifies the branch_number when descending from branch_depth
+    if skill == "descender" and dungeon_depth == branch_depth+1:
+        branch_number = random.choice([0, 2])
+    # If player ascends from gnomish mines, it necessarily goes back to the dungeons of doom
+    elif skill == "ascender" and dungeon_depth == branch_depth and branch_number == 2:
+        branch_number = 0
+###
+
+Before writing the code, write a few questions for yourself, and answer them to make sure you understand the assignment. Explain what you can and cannot control in the environment.
+
+Clearly state what is your strategy and the output you want by running the code.
+
+In your response make sure to include the code for the class definition and the unit test in a python markdown.

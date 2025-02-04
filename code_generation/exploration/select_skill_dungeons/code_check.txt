@@ -1,0 +1,19 @@
+Here is the output obtained when running the proposed code with the unit test:
+
+"
+{}
+"
+
+Here was the desired strategy:
+
+The strategy should be the following: at branch_depth, the player should always attempt to descend into the Dungeons of Doom (branch number 0) at  branch_depth+1. Because the Descender can't tell which staircase at branch_depth leads to which branch, it is inevitable that the Player may descend into the Gnomish Mines at branch_depth+1 multiple times.
+
+If the descent to branch_depth+1 leads the agent to the Gnomish Mines (branch number 2), the player should immediately attempt to ascend to branch_depth and try again descending further into the Dungeons of Doom (branch number 0).
+
+Once deeper in the Dungeons of Doom the player can behave as usual with the exploration strategy involving the skills.
+
+The reach_dungeons_of_doom method cannot modify the branch_number variable, but it should call the select_skill method.
+
+Does the output seem correct to you? Yes or no. Tell me why you say so.
+
+Do not write any code.

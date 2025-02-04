@@ -1,0 +1,19 @@
+Here is the output obtained when running the proposed code with the unit test:
+
+"
+{}
+"
+
+Here was the desired strategy:
+
+You are now faced with the task of interacting with an altar by successfully identifying items.
+
+Write the code for "perform_task" method such that the player interacts with the altar, which appears more often in the Dungeons of Doom.
+
+You should make use of the two existing methods.  The "reach_gnomish_mines" method brings the player to the Gnomish Mines from the Dungeons of Doom. The "reach_dungeons_of_doom" method brings the player to the Dungeons of Doom from the Gnomish Mines. 
+
+Altars appear from dungeon depth 1, modify "worshipper_precondition" accordingly.
+
+Does the output seem correct to you? Yes or no. Tell me why you say so.
+
+Do not write any code.

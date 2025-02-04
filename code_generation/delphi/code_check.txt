@@ -1,0 +1,17 @@
+Here is the output obtained when running the proposed code with the unit test:
+
+"
+{}
+"
+
+Here was the desired strategy:
+
+The Oracle level is located in the Dungeons of Doom (branch number 0) and can appear as low as a depth of 9. The Gnomish Mines form a secondary branch (branch number 2) starting from branch_depth+1.
+
+Write the code for "perform_task" method such that the player reaches the Oracle level as fast as possible, rather than exploring the first few levels or venturing into the Gnomish Mines.
+
+You should make use of the two existing methods.  The "reach_gnomish_mines" method brings the player to the Gnomish Mines from the Dungeons of Doom. The "reach_dungeons_of_doom" method brings the player to the Dungeons of Doom from the Gnomish Mines. 
+
+Does the output seem correct to you? Yes or no. Tell me why you say so.
+
+Do not write any code.

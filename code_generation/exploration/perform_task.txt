@@ -1,0 +1,5 @@
+    def perform_task(self, current_skill, dungeon_depth, branch_number, merchant_precondition, worshipper_precondition):
+        if self.mines:
+            return self.reach_gnomish_mines(current_skill, dungeon_depth, branch_number, merchant_precondition, worshipper_precondition)
+        else:
+            return self.reach_dungeons_of_doom(current_skill, dungeon_depth, branch_number, merchant_precondition, worshipper_precondition)

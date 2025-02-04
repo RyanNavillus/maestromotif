@@ -1,0 +1,39 @@
+You are to write code which defines the method "select_skill" of the NetHack Player class that selects amongst a set of skills in the videogame of NetHack. The set of skills corresponds to {"discoverer", "descender", "ascender", "merchant", "worshipper"}. 
+
+When activated, the Discoverer fully explores the current dungeon, while fighting off enemies. The Descender makes its way to a staircase and goes down. The Ascender makes its way to a staircase and goes up. The Merchant interacts with shopkeepers by selling its items. The Worshipper interacts with altars by identifying its items.
+
+Find a strategy that will let the player explore fully each of the first few dungeon levels, alternating directions between going all the way down towards the maximum depth, then going up towards the first dungeon. This might get interrupted by the end of the loop or if the preconditions of worshipper and merchant allow for it.
+
+You can keep track of any other information by assigning values to other class attributes, but only if that really helps.
+
+Your code will be verified through this unit test. 
+
+###
+
+# Starting conditions
+skill = 'discoverer'
+dungeon_depth = 1
+
+max_depth = # to be defined
+
+player = NetHackPlayer(max_depth)
+
+for turn in range(30):
+
+    print(f"Turn {turn + 1}: Skill = {skill}, Dungeon depth = {dungeon_depth}")
+
+    merchant_precondition = player.merchant_precondition()
+    worshipper_precondition = player.worshipper_precondition()
+
+    skill = player.select_skill(skill, dungeon_depth, merchant_precondition, worshipper_precondition)
+
+    # the environment updates the dungeon_depth
+    if skill == 'descender':
+        dungeon_depth += 1
+    elif skill == 'ascender':
+        dungeon_depth -= 1
+###
+
+Before writing the code, write a few questions for yourself, and answer them to make sure you understand the assignment.
+
+In your response make sure to include the code for the class definition and the unit test in a python markdown.

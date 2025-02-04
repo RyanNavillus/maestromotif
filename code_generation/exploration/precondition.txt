@@ -1,0 +1,35 @@
+
+    def skill_precondition(self, char_ascii_encodings, char_ascii_colors, num_items, color_map):
+        """
+        Determine preconditions for Worshipper and Merchant skills.
+
+        Args:
+            char_ascii_encodings: numpy array representing ASCII encodings of surrounding characters.
+            char_ascii_colors: numpy array representing the colors of the surrounding characters.
+            num_items: number of items the agent has.
+            color_map: a map from common characters to their expected color.
+
+        Returns:
+            Tuple (worshipper_precondition, merchant_precondition):
+                - worshipper_precondition: True if Worshipper skill can initiate.
+                - merchant_precondition: True if Merchant skill can initiate.
+        """
+        # Fetch relevant colors from the color map
+        shopkeeper_color = color_map.get("@", None)  # Shopkeeper
+        altar_color = color_map.get("_", None)       # Altar
+
+        # Initialize preconditions
+        worshipper_precondition = False
+        merchant_precondition = False
+
+        # Check for Merchant precondition
+        if shopkeeper_color is not None and num_items > 0:
+            shopkeeper_mask = (char_ascii_encodings == 64) & (char_ascii_colors == shopkeeper_color)
+            merchant_precondition = shopkeeper_mask.any()
+
+        # Check for Worshipper precondition
+        if altar_color is not None and num_items > 0:
+            altar_mask = (char_ascii_encodings == 95) & (char_ascii_colors == altar_color)
+            worshipper_precondition = altar_mask.any()
+
+        return worshipper_precondition, merchant_precondition

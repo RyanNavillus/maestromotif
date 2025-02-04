@@ -1,0 +1,8 @@
+
+    def set_initial_values(self,):
+        # Initiating values from execution.py and from termination.txt
+        self.skill = 'discoverer'
+        self.max_depth = 10
+        self.discoverer_skill_steps = 500 # either 50 or 500
+        self.merchant_skill_steps = self.discoverer_skill_steps * 20
+        self.worshipper_skill_steps = self.discoverer_skill_steps * 20

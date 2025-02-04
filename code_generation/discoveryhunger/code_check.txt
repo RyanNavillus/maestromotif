@@ -1,0 +1,20 @@
+Here is the output obtained when running the proposed code with the unit test:
+
+"
+{}
+"
+
+Here was the desired strategy:
+
+
+Reach the oracle level, but not before discovering the Gnomish Mines and eating some food there after getting hungry.
+
+The Oracle level is located in the Dungeons of Doom (branch number 0) and can appear as low as a depth of 9. The Gnomish Mines form a secondary branch (branch number 2) starting from branch_depth+1.
+
+You should make use of the two existing methods.  The "reach_gnomish_mines" method brings the player to the Gnomish Mines from the Dungeons of Doom. The "reach_dungeons_of_doom" method brings the player to the Dungeons of Doom from the Gnomish Mines. 
+
+Eating food happens by activating the Discoverer skill in the Gnomish Mines. Immediately after eating the food, head as fast as possible for the Oracle level in the Dungeons of Doom (branch number 0), without more exploration.
+
+Does the output seem correct to you? Yes or no. Tell me why you say so.
+
+Do not write any code.
