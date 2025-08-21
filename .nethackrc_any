@@ -12,10 +12,10 @@ OPTIONS=time
 OPTIONS=paranoid_confirmation:none
 OPTIONS=pettype:none
 OPTIONS:name:Agent
-OPTIONS=race:hum
-OPTIONS=role:val
-OPTIONS=gender:mal
-OPTIONS=align:neu
+OPTIONS=race:random
+OPTIONS=role:random
+OPTIONS=gender:random
+OPTIONS=align:random
 
 # autopickup
 OPTIONS=pickup_types:$/%?!

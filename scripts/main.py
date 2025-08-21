@@ -7,8 +7,13 @@ from sample_factory.utils.utils import str2bool
 
 # Needs to be imported to register models and envs
 import rl_baseline.monk_tasks_nle
+import rl_baseline.tasks_nle
 import rl_baseline.encoders_nle
 import rl_baseline.env_nle
+from syllabus.curricula import DomainRandomization
+from syllabus.task_space import DiscreteTaskSpace
+from syllabus.core import make_multiprocessing_curriculum
+
 
 def add_extra_params(parser):
     """
@@ -42,7 +47,9 @@ def main():
             name=cfg.experiment,
             sync_tensorboard=True,
         )
-
+    curriculum = DomainRandomization(DiscreteTaskSpace(1))
+    curriculum = make_multiprocessing_curriculum(curriculum)
+    cfg.curriculum_components = curriculum.components
     status = run_algorithm(cfg)
     return status
 

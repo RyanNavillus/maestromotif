@@ -105,6 +105,7 @@ class BlstatsWrapper(gym.Wrapper):
                 self.bl_norm.shape[0],
                 env.observation_space['blstats'].shape[0]
             )
+        self.num_items = 30
         self.diff_h = diff_h
         self.diffstats_dict = {'dlvl': 12, 'gold': 13, 'hp': 10, 'xp': 18, 'hunger': 21}
         self.prev_stats = {}
@@ -142,7 +143,6 @@ class BlstatsWrapper(gym.Wrapper):
             obs['diffstats'].append(diff)
         obs['diffstats'] = np.array(obs['diffstats'], dtype=np.float32)
         obs['diffstats'][1:] *= 0 # Only keep some stats for BT model
-
         norm_blstats = (obs["blstats"] * self.bl_norm[:self.num_items])
         norm_blstats = norm_blstats.astype(np.float32)
         obs["norm_blstats"] = norm_blstats
@@ -172,7 +172,6 @@ class BlstatsWrapper(gym.Wrapper):
         self.prev_stats = {'dlvl': deque(maxlen=self.diff_h)}
         self.prev_stats['dlvl'].append(obs['blstats'][12])
         self.reset_prev_stats(obs)
-
         obs = self._adjust_blstats(obs)
         _ = obs.pop("blstats")
         return obs
@@ -565,7 +564,7 @@ class ModifierWrapper(gym.Wrapper):
 
         obs["blstats"] = np.append(obs["blstats"], self.skill_vector[self.skill])
         obs['option'] = np.array([self.skill]).astype(np.int64)
-        obs['buc'] = np.array([cur_buc]).astype(np.int64)
+        # obs['buc'] = np.array([cur_buc]).astype(np.int64)
         info['branch_id'] = int(self.branch_dlvl != -2)
         info['dungeon_number'] = self.dungeon_number
         info['depth'] = self.depth

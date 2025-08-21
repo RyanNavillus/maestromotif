@@ -317,7 +317,10 @@ class APPO(ReinforcementLearningAlgorithm):
     def _save_cfg(self):
         cfg_dict = self._cfg_dict()
         with open(cfg_file(self.cfg), 'w') as json_file:
+            components = cfg_dict['curriculum_components']
+            del cfg_dict['curriculum_components']
             json.dump(cfg_dict, json_file, indent=2)
+            cfg_dict['curriculum_components'] = components
 
     def initialize(self):
         self._save_cfg()

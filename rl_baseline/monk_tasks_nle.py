@@ -7,10 +7,9 @@ import time
 import gym
 import numpy as np
 from gym.envs import registration
-from nle import nethack
 from nle.env import base
+from nle import nethack
 from nle.env.base import ASCII_ESC, ASCII_SPACE, ASCII_y, ASCII_n
-from nle.nethack import NETHACKOPTIONS
 
 from sample_factory.utils.utils import log
 from utils.forked_pdb import ForkedPdb
@@ -51,6 +50,7 @@ class NetHackScoreMonk(base.NLE):
         experiment='',
         evaluation=False,
         eval_target='none',
+        options=("@.nethackrc",),
         **kwargs,
     ):
         self.penalty_mode = penalty_mode
@@ -85,7 +85,7 @@ class NetHackScoreMonk(base.NLE):
         super().__init__(
             *args, 
             actions=actions, 
-            options=CUSTOM_OPTIONS, 
+            options=options, 
             max_episode_steps=max_episode_steps,
             **kwargs)
 
@@ -290,13 +290,15 @@ class NetHackScoreMonk(base.NLE):
         spellbook_idx = np.where(inventory_types == 10)[0]
         spellbook = bytes(obs['inv_strs'][spellbook_idx])
         if b"healing" in spellbook:
-            self.skill_feature = np.array([0])
-        elif b"protection" in spellbook:
             self.skill_feature = np.array([1])
-        elif b"sleep" in spellbook:
+        elif b"protection" in spellbook:
             self.skill_feature = np.array([2])
+        elif b"sleep" in spellbook:
+            self.skill_feature = np.array([3])
+        else:
+            self.skill_feature = np.array([0])
 
-        # Ientify inventory
+        # Identify inventory
         non_comestibles = (self.last_observation[self._inv_oclasses_index] != 7)
         self.starting_inv_letters = set(self.last_observation[self._inv_letters_index][non_comestibles].copy())
 
@@ -525,3 +527,57 @@ registration.register(
     id="NetHackScoreMonk-v1",
     entry_point=NetHackScoreMonk,
 )
+
+
+class NetHackScoreAny(NetHackScoreMonk):
+    def __init__(
+        self,
+        *args,
+        **kwargs,
+    ):
+        super().__init__(
+            *args,
+            options=("@.nethackrc_any",), 
+            **kwargs)
+
+registration.register(
+    id="NetHackScoreAny-v1",
+    entry_point=NetHackScoreAny,
+)
+
+class NetHackScoreResetWrapper():
+    def __init__(
+        self,
+        *args,
+        **kwargs,
+    ):
+        self.init_args = args
+        self.init_kwargs = kwargs
+        self.env = NetHackScoreMonk(
+            *args,
+            **kwargs
+        )
+    
+    def reset(self, *args, **kwargs):
+        init_options = self.init_kwargs.pop("options", [])
+        if "new_task" in kwargs:
+            task = kwargs.pop("new_task")
+            options = tuple(
+                list(init_options) + [f"role:{task}"]
+            )
+        else:
+            options = init_options
+
+        self.env = NetHackScoreMonk(
+            *self.init_args,
+            **self.init_kwargs,
+            options=options,
+        )
+        self.init_kwargs["options"] = init_options
+        return self.env.reset(*args, **kwargs)
+
+    def __getattr__(self, name):
+        if hasattr(self.env, name):
+            return getattr(self.env, name)
+        else:
+            raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{name}'")

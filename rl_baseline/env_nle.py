@@ -1,6 +1,7 @@
 import importlib
 import os
 import gym
+import gymnasium
 import numpy as np
 
 import nle
@@ -10,6 +11,10 @@ from nle import nethack
 from rl_baseline.obs_wrappers import RenderCharImagesWithNumpyWrapper, MessageWrapper, BlstatsWrapper, ModifierWrapper
 from sample_factory.envs.env_registry import global_env_registry
 from utils.forked_pdb import ForkedPdb
+
+from syllabus.core import GymnasiumSyncWrapper, TaskWrapper
+from syllabus.task_space import DiscreteTaskSpace
+from shimmy.openai_gym_compatibility import GymV21CompatibilityV0
 
 
 def load_player_class(policy_name, player_class):
@@ -27,6 +32,62 @@ def load_player_class(policy_name, player_class):
     except AttributeError:
         print(f"Player class not found in {policy_name}.code.")
         return None
+
+def _convert_space(space: gym.Space) -> gymnasium.Space:
+    """Converts a gym space to a gymnasium space.
+
+    Args:
+        space: the space to convert
+
+    Returns:
+        The converted space
+    """
+    if isinstance(space, gymnasium.spaces.Discrete):
+        return gym.spaces.Discrete(n=space.n)
+    elif isinstance(space, gymnasium.spaces.Box):
+        return gym.spaces.Box(low=space.low, high=space.high, shape=space.shape, dtype=space.dtype)
+    elif isinstance(space, gymnasium.spaces.MultiDiscrete):
+        return gym.spaces.MultiDiscrete(nvec=space.nvec)
+    elif isinstance(space, gymnasium.spaces.MultiBinary):
+        return gym.spaces.MultiBinary(n=space.n)
+    elif isinstance(space, gymnasium.spaces.Tuple):
+        return gym.spaces.Tuple(spaces=tuple(map(_convert_space, space.spaces)))
+    elif isinstance(space, gymnasium.spaces.Dict):
+        return gym.spaces.Dict(spaces={k: _convert_space(v) for k, v in space.spaces.items()})
+    elif isinstance(space, gymnasium.spaces.Sequence):
+        return gym.spaces.Sequence(space=_convert_space(space.feature_space))
+    elif isinstance(space, gymnasium.spaces.Graph):
+        return gym.spaces.Graph(
+            node_space=_convert_space(space.node_space),  # type: ignore
+            edge_space=_convert_space(space.edge_space),  # type: ignore
+        )
+    elif isinstance(space, gymnasium.spaces.Text):
+        return gym.spaces.Text(
+            max_length=space.max_length,
+            min_length=space.min_length,
+            charset=space._char_str,
+        )
+    else:
+        raise NotImplementedError(
+            f"Cannot convert space of type {space}. Please upgrade your code to gymnasium."
+        )
+
+
+class GymConvWrapper(gym.Wrapper):
+    def __init__(self, env):
+        super().__init__(env)
+        self.env = env
+        self.task_space = self.env.task_space
+        self.observation_space = _convert_space(self.env.observation_space)
+        self.action_space = _convert_space(self.env.action_space)
+
+    def step(self, action):
+        obs, rew, term, trunc, info = self.env.step(action)
+        return obs, rew, term or trunc, info
+
+    def reset(self, **kwargs):
+        obs, _ = self.env.reset(**kwargs)
+        return obs
 
 
 class RootNLEWrapper(gym.Wrapper):
@@ -63,6 +124,87 @@ class RootNLEWrapper(gym.Wrapper):
         obs = self.env.reset()
         obs = {k: obs[k] for k in obs if k in self.task_space}
         return obs
+
+
+
+class NethackSeedWrapper(TaskWrapper):
+    """
+    This wrapper allows you to change the task of an NLE environment.
+
+    This wrapper was designed to meet two goals.
+        1. Allow us to change the task of the NLE environment at the start of an episode
+        2. Allow us to use the predefined NLE task definitions without copying/modifying their code.
+           This makes it easier to integrate with other work on nethack tasks or curricula.
+
+    Each task is defined as a subclass of the NLE, so you need to cast and reinitialize the
+    environment to change its task. This wrapper manipulates the __class__ property to achieve this,
+    but does so in a safe way. Specifically, we ensure that the instance variables needed for each
+    task are available and reset at the start of the episode regardless of which task is active.
+    """
+
+    def __init__(
+        self,
+        env: gym.Env,
+        seed: int = 0,
+        num_seeds: int = 200,
+    ):
+        super().__init__(env)
+        self.env = env
+        self.task_space = DiscreteTaskSpace(num_seeds)
+
+        # Task completion metrics
+        self.episode_return = 0
+        self.task = seed
+
+        if seed is not None:
+            self.seed(seed)
+
+    def seed(self, seed):
+        env = self.env
+        while hasattr(env, "env"):
+            env = env.env
+        env.seed(core=seed, disp=seed)
+
+    def _task_name(self, task):
+        return task.__name__
+
+    def reset(self, new_task=None, **kwargs):
+        """
+        Resets the environment along with all available tasks, and change the current task.
+
+        This ensures that all instance variables are reset, not just the ones for the current task.
+        We do this efficiently by keeping track of which reset functions have already been called,
+        since very few tasks override reset. If new_task is provided, we change the task before
+        calling the final reset.
+        """
+        self.episode_return = 0
+        obs, info = super().reset(new_task=new_task, **kwargs)
+        return self.observation(obs), info
+
+    def change_task(self, new_task: int):
+        """
+        Change task by setting the seed.
+        """
+        # Ignore new task if mid episode
+        self.task = new_task
+        self.seed(new_task)
+
+    def observation(self, observation):
+        """
+        Returns a modified observation.
+        """
+        return observation
+
+    def _task_completion(self, obs, rew, term, trunc, info):
+        return min(max(self.episode_return / 1000, 0.0), 1.0)
+
+    def step(self, action):
+        """
+        Step through environment and update task completion.
+        """
+        obs, rew, term, trunc, info = super().step(action)
+        self.episode_return += rew
+        return obs, rew, term, trunc, info
 
 
 def make_custom_env_func(full_env_name, cfg=None, env_config=None):
@@ -143,7 +285,11 @@ def make_custom_env_func(full_env_name, cfg=None, env_config=None):
                           num_skills=cfg.num_skills, meta_policy_class=MetaPolicyClass)
 
     env = BlstatsWrapper(env, experiment=cfg.experiment, diff_h=cfg.diff_h, diffstats_size=cfg.diffstats_size)
+    env = GymV21CompatibilityV0(env=env)
+    env = NethackSeedWrapper(env, num_seeds=1)
+    env = GymnasiumSyncWrapper(env, DiscreteTaskSpace(1), cfg.curriculum_components)
 
+    env = GymConvWrapper(env)
     return env
 
 
